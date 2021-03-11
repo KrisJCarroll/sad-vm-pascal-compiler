@@ -216,20 +216,37 @@ class if_else_statement : public statement {
         }
 
         void evaluate() {
-            std::cout << "Evaluating IF cond: " << bool(expression->evaluate()) << std::endl;
+            std::cout << "Evaluating IF cond: " << expression->evaluate() << std::endl;
             if (expression->evaluate()) {
                 std::cout << "Evaluating statement: ";
                 statement1->print();
-                std::cout << std::endl;
                 statement1->evaluate();
             }
             else {
                 std::cout << "Evaluating statement: ";
                 statement2->print();
-                std::cout << std::endl;
                 statement2->evaluate();
             }
 
+        }
+};
+
+class while_statement : public statement {
+    public:
+        while_statement(expression_node* exp, statement* loop_body) { expression = exp; statement1 = loop_body;}
+        void print() {
+            std::cout << "WHILE ";
+            expression->print();
+            std::cout << " DO: ";
+            statement1->print();
+        }
+        void evaluate() {
+            std::cout << "Evaluating WHILE cond: " << expression->evaluate() << std:: endl;
+            while (expression->evaluate()) {
+                std::cout << "Evaluating statement: ";
+                statement1->print();
+                statement1->evaluate();
+            }
         }
 };
 
