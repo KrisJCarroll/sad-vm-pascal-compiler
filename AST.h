@@ -110,6 +110,21 @@ class gt_node : public expression_node {
         }
 };
 
+class lt_node : public expression_node {
+    public:
+        lt_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
+        void print() {
+            std::cout << "(";
+            left->print();
+            std::cout << " < ";
+            right->print();
+            std::cout << ")";
+        }
+        int evaluate() {
+            return left->evaluate() < right->evaluate();
+        }
+};
+
 
 class statement {
     public:
