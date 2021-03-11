@@ -201,6 +201,38 @@ class if_statement : public statement {
         }
 };
 
+class if_else_statement : public statement {
+    public:
+        if_else_statement(expression_node* exp, statement* then_statement, statement* else_statement) {
+            expression = exp; statement1 = then_statement; statement2 = else_statement;
+        }
+        void print() {
+            std::cout << "IF ";
+            expression->print();
+            std::cout << " THEN: ";
+            statement1->print();
+            std::cout << "ELSE: ";
+            statement2->print();
+        }
+
+        void evaluate() {
+            std::cout << "Evaluating IF cond: " << bool(expression->evaluate()) << std::endl;
+            if (expression->evaluate()) {
+                std::cout << "Evaluating statement: ";
+                statement1->print();
+                std::cout << std::endl;
+                statement1->evaluate();
+            }
+            else {
+                std::cout << "Evaluating statement: ";
+                statement2->print();
+                std::cout << std::endl;
+                statement2->evaluate();
+            }
+
+        }
+};
+
 class program {
     protected:
         std::vector<statement*> *statement_list; // AST representation of the program's statements
