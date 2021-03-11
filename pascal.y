@@ -78,8 +78,8 @@ statement: ID ASSIGN expression { $$ = new assign_statement($1, $3); }
 
 expression: expression GT additive_expression  { $$ = new gt_node($1, $3); }
           | expression LT additive_expression  { $$ = new lt_node($1, $3); }
-          | expression GTE additive_expression { }
-          | expression LTE additive_expression { }
+          | expression GTE additive_expression { $$ = new gte_node($1, $3); }
+          | expression LTE additive_expression { $$ = new lte_node($1, $3); }
           | additive_expression { $$ = $1; }
 ;
 
