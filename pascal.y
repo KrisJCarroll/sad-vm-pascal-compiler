@@ -76,7 +76,7 @@ statement: ID ASSIGN expression { $$ = new assign_statement($1, $3); }
          | WRITELN expression SEMI { }
 ;
 
-expression: expression GT additive_expression  { }
+expression: expression GT additive_expression  { $$ = new gt_node($1, $3); }
           | expression LT additive_expression  { }
           | expression GTE additive_expression { }
           | expression LTE additive_expression { }
