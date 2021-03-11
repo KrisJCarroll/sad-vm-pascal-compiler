@@ -169,7 +169,7 @@ class statement {
 class assign_statement : public statement {
     public:
         std::string id;
-        assign_statement(const char* id_, expression_node* exp_) { expression = exp_; id = std::string(id_); }
+        assign_statement(const char* id_, expression_node* exp) { expression = exp; id = std::string(id_); }
         void print() {
             std::cout << id << " := ";
             expression->print();
@@ -178,6 +178,26 @@ class assign_statement : public statement {
         void evaluate() {
             int result = expression->evaluate();
             symbols[id] = result;
+        }
+};
+
+class if_statement : public statement {
+    public:
+        if_statement(expression_node* exp, statement* then_statement) { expression = exp; statement1 = then_statement; }
+        void print() {
+            std::cout << "IF ";
+            expression->print();
+            std::cout << " THEN: ";
+            statement1->print();
+        }
+        void evaluate() {
+            std::cout << "Evaluating IF cond: " << bool(expression->evaluate()) << std::endl;
+            if (expression->evaluate()) {
+                std::cout << "Evaluating statement: ";
+                statement1->print();
+                std::cout << std::endl;
+                statement1->evaluate();
+            }
         }
 };
 

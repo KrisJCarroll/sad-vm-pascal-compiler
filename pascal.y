@@ -70,7 +70,7 @@ statement_list: statement_list SEMI statement { $1->push_back($3); $$ = $1; }
 ;
 
 statement: ID ASSIGN expression { $$ = new assign_statement($1, $3); }
-         | IF expression THEN statement %prec IFX { }
+         | IF expression THEN statement %prec IFX { $$ = new if_statement($2, $4); }
          | IF expression THEN statement ELSE statement
          | WHILE expression DO statement
          | WRITELN expression SEMI { }
