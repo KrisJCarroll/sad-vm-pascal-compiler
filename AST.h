@@ -22,7 +22,7 @@ class num_node : public expression_node {
     public:
         num_node(int val_) : val(val_) {}
         void print() { std::cout << val; }
-        int evaluate() { return val; };
+        int evaluate() { return val; }
 };
 
 class var_node : public expression_node {
@@ -30,8 +30,8 @@ class var_node : public expression_node {
         std::string id;
     public:
         var_node(const char* id_) : id(std::string(id_)) {}
-        void print() { std::cout << id; };
-        int evaluate() { return symbols[id]; };
+        void print() { std::cout << id; }
+        int evaluate() { return symbols[id]; }
 };
 
 class add_node : public expression_node {
@@ -92,7 +92,7 @@ class div_node : public expression_node {
         int evaluate() {
             return left->evaluate() / right->evaluate();
         }
-        }
+        
 };
 
 
