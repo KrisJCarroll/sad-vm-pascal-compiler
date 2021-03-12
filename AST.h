@@ -157,19 +157,19 @@ class lte_node : public expression_node {
 
 
 class statement {
-    public:
+    protected:
         std::string code; // storage for concatenated code strings
         expression_node* expression; // expression for each statement
-        statement* statement1; // THEN/DO statement for IF-THEN/WHILE
-        statement* statement2; // ELSE statement for IF-THEN-ELSE
+    public:
         virtual void print() = 0;
         virtual void evaluate() = 0;
 };
 
 class assign_statement : public statement {
-    public:
+    protected:
         std::string id;
-        assign_statement(const char* id_, expression_node* exp) { expression = exp; id = std::string(id_); }
+    public:
+        assign_statement(const char* id_, expression_node* exp) : id(id_)  { expression = exp; }
         void print() {
             std::cout << id << " := ";
             expression->print();
@@ -182,70 +182,98 @@ class assign_statement : public statement {
 };
 
 class if_statement : public statement {
+    protected:
+        std::vector<statement*>* statement_list;
     public:
-        if_statement(expression_node* exp, statement* then_statement) { expression = exp; statement1 = then_statement; }
+        if_statement(expression_node* exp, std::vector<statement*> *then_statement) : statement_list(then_statement) { expression = exp; }
         void print() {
             std::cout << "IF ";
             expression->print();
             std::cout << " THEN: ";
-            statement1->print();
+            std::vector<statement*>::iterator stmt;
+            for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
+                (*stmt)->print();
+            }
         }
         void evaluate() {
             std::cout << "Evaluating IF cond: " << bool(expression->evaluate()) << std::endl;
             if (expression->evaluate()) {
-                std::cout << "Evaluating statement: ";
-                statement1->print();
-                std::cout << std::endl;
-                statement1->evaluate();
+                std::cout << "Evaluating statements: ";
+                std::vector<statement*>::iterator stmt;
+                for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
+                    (*stmt)->print();
+                    (*stmt)->evaluate();
+                }
             }
         }
 };
 
 class if_else_statement : public statement {
+    protected:
+        std::vector<statement*> *then_list;
+        std::vector<statement*> *else_list;
     public:
-        if_else_statement(expression_node* exp, statement* then_statement, statement* else_statement) {
-            expression = exp; statement1 = then_statement; statement2 = else_statement;
-        }
+        if_else_statement(expression_node* exp, std::vector<statement*> *then_statement, std::vector<statement*> *else_statement) :
+            then_list(then_statement), else_list(else_statement) {expression = exp; }
         void print() {
             std::cout << "IF ";
             expression->print();
             std::cout << " THEN: ";
-            statement1->print();
+            std::vector<statement*>::iterator stmt;
+            for (stmt = then_list->begin(); stmt != then_list->end(); stmt++) {
+                (*stmt)->print();
+            }
             std::cout << "ELSE: ";
-            statement2->print();
+            for (stmt = else_list->begin(); stmt != else_list->end(); stmt++) {
+                (*stmt)->print();
+            }
         }
 
         void evaluate() {
             std::cout << "Evaluating IF cond: " << expression->evaluate() << std::endl;
             if (expression->evaluate()) {
-                std::cout << "Evaluating statement: ";
-                statement1->print();
-                statement1->evaluate();
+                std::cout << "Evaluating statements: ";
+                std::vector<statement*>::iterator stmt;
+                for (stmt = then_list->begin(); stmt != then_list->end(); stmt++) {
+                    (*stmt)->print();
+                    (*stmt)->evaluate();
+                }
             }
             else {
-                std::cout << "Evaluating statement: ";
-                statement2->print();
-                statement2->evaluate();
+                std::cout << "Evaluating statements: ";
+                std::vector<statement*>::iterator stmt;
+                for (stmt = else_list->begin(); stmt != else_list->end(); stmt++) {
+                    (*stmt)->print();
+                    (*stmt)->evaluate();
+                }
             }
 
         }
 };
 
 class while_statement : public statement {
+    protected:
+        std::vector<statement*> *statement_list;
     public:
-        while_statement(expression_node* exp, statement* loop_body) { expression = exp; statement1 = loop_body;}
+        while_statement(expression_node* exp, std::vector<statement*> *loop_body) : statement_list(loop_body) { expression = exp; }
         void print() {
             std::cout << "WHILE ";
             expression->print();
             std::cout << " DO: ";
-            statement1->print();
+            std::vector<statement*>::iterator stmt;
+            for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
+                (*stmt)->print();
+            }
         }
         void evaluate() {
             std::cout << "Evaluating WHILE cond: " << expression->evaluate() << std:: endl;
             while (expression->evaluate()) {
-                std::cout << "Evaluating statement: ";
-                statement1->print();
-                statement1->evaluate();
+                std::cout << "Evaluating statements: ";
+                std::vector<statement*>::iterator stmt;
+                for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
+                    (*stmt)->print();
+                    (*stmt)->evaluate();
+                }
             }
         }
 };

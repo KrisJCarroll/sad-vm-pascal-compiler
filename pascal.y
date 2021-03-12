@@ -62,6 +62,7 @@ id_list: ID { insert_symbol($1); }
 ;
 
 block: BEG statement_list END { $$ = $2; }
+     | statement { $$ = new std::vector<statement*>(); $$->push_back($1); }
 ;
 
 statement_list: statement_list SEMI statement { $1->push_back($3); $$ = $1; }   
@@ -70,9 +71,9 @@ statement_list: statement_list SEMI statement { $1->push_back($3); $$ = $1; }
 ;
 
 statement: ID ASSIGN expression { $$ = new assign_statement($1, $3); }
-         | IF expression THEN statement %prec IFX { $$ = new if_statement($2, $4); }
-         | IF expression THEN statement ELSE statement { $$ = new if_else_statement($2, $4, $6); }
-         | WHILE expression DO statement { $$ = new while_statement($2, $4); }
+         | IF expression THEN block %prec IFX { $$ = new if_statement($2, $4); }
+         | IF expression THEN block ELSE block { $$ = new if_else_statement($2, $4, $6); }
+         | WHILE expression DO block { $$ = new while_statement($2, $4); }
          | WRITELN expression SEMI { }
 ;
 
