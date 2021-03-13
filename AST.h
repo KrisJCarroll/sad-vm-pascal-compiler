@@ -71,7 +71,7 @@ class add_node : public expression_node {
         std::list<std::string>* compile() {
             // getting temporary address to store result in
             addr = get_reg();
-            // assembling code for add
+            // assembling code for ADD
             std::list<std::string> *left_code = left->compile();
             std::list<std::string>::iterator i;
             for (i = left_code->begin(); i != left_code->end(); i++) {
@@ -95,7 +95,7 @@ class add_node : public expression_node {
 
 class sub_node : public expression_node {
     public:
-        sub_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; addr = get_reg(); }
+        sub_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
         void print() {
             std::cout << "(";
             left->print();
@@ -107,11 +107,26 @@ class sub_node : public expression_node {
             return left->evaluate() - right->evaluate();
         }
         std::list<std::string>* compile() {
+            // getting temporary address to store result in
+            addr = get_reg();
+            // assembling code for SUB
+            std::list<std::string> *left_code = left->compile();
+            std::list<std::string>::iterator i;
+            for (i = left_code->begin(); i != left_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::list<std::string> *right_code = right->compile();
+            for (i = right_code->begin(); i != right_code->end(); i++) {
+                code.push_back(*i);
+            }
             std::string add_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", SUB)";
-            // assembling code for add
-            code.push_back(*(left->compile()->begin()));
-            code.push_back(*(right->compile()->begin()));
             code.push_back(add_code);
+
+            // cleaning up registers to be reused
+            regs.push_front(right->addr);
+            regs.push_front(left->addr);
+            right->addr = "";
+            left->addr = "";
             return &code;
         }
 };
