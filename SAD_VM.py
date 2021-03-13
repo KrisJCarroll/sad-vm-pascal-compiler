@@ -1,3 +1,30 @@
+######################################################################################
+# SAD_VM.py
+# Author: Kristopher J. Carroll
+# Description: 
+#   SAD (Simple and Dumb) VM is a simulated machine featuring a 32-bit RISC
+#   instruction set architecture. It has 16 accessible registers including a program
+#   counter, dedicated count register, and 14 general-use registers. Additionally,
+#   it has two inaccessible registers, a conditional flag register for use with
+#   boolean expressions and conditional jump statements as well as a return address
+#   register that is automatically set with the JMPR (jump and return) instruction
+#   for function calls. SAD VM has separate code and program memory and a stack
+#   that is accessible to the programmer.
+#
+#   OP codes have been defined as their representative hexadecimal values for ease of
+#   writing instructions, their structure and layout can be viewed in further detail
+#   in the SAD_VM.pdf document.
+#
+#   Although the instruction set was designed as a fixed-width RISC style, the current
+#   implementation does not enforce this width. However, all operations of the machine
+#   expect to find instructions according to their proper format.
+#
+#   Instructions for a small subset of the Pascal programming language can be compiled
+#   for pasting directly into SAD_VM.py with the use of the pascal.l, pascal.y and AST.h
+#   files found in this repository, which can be built with the included MAKEFILE.
+######################################################################################
+
+
 # op codes
 MOV = 0x0
 MEM = 0x1
