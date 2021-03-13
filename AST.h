@@ -119,8 +119,8 @@ class sub_node : public expression_node {
             for (i = right_code->begin(); i != right_code->end(); i++) {
                 code.push_back(*i);
             }
-            std::string add_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", SUB)";
-            code.push_back(add_code);
+            std::string sub_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", SUB)";
+            code.push_back(sub_code);
 
             // cleaning up registers to be reused
             regs.push_front(right->addr);
@@ -157,8 +157,8 @@ class mult_node : public expression_node {
             for (i = right_code->begin(); i != right_code->end(); i++) {
                 code.push_back(*i);
             }
-            std::string add_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", MULT)";
-            code.push_back(add_code);
+            std::string mult_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", MULT)";
+            code.push_back(mult_code);
 
             // cleaning up registers to be reused
             regs.push_front(right->addr);
@@ -195,8 +195,8 @@ class div_node : public expression_node {
             for (i = right_code->begin(); i != right_code->end(); i++) {
                 code.push_back(*i);
             }
-            std::string add_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", DIV)";
-            code.push_back(add_code);
+            std::string div_code = "(MATH, " + addr + ", " + left->addr + ", " + right->addr + ", DIV)";
+            code.push_back(div_code);
 
             // cleaning up registers to be reused
             regs.push_front(right->addr);
@@ -222,11 +222,18 @@ class gt_node : public expression_node {
             return left->evaluate() > right->evaluate();
         }
         std::list<std::string>* compile() {
-            std::string add_code = "(COMP, " + left->addr + ", " + right->addr + ", GT)";
-            // assembling code for add
-            code.push_back(*(left->compile()->begin()));
-            code.push_back(*(right->compile()->begin()));
-            code.push_back(add_code);
+            // assembling code for GT comparison
+            std::list<std::string> *left_code = left->compile();
+            std::list<std::string>::iterator i;
+            for (i = left_code->begin(); i != left_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::list<std::string> *right_code = right->compile();
+            for (i = right_code->begin(); i != right_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::string gt_code = "(COMP, " + left->addr + ", " + right->addr + ", GT)";
+            code.push_back(gt_code);
             return &code;
         }
 };
