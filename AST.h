@@ -6,7 +6,7 @@
 #include <map>
 
 extern std::list<std::string> regs;
-
+extern int line_num;
 
 class expression_node {
     protected: 
@@ -23,6 +23,7 @@ class expression_node {
         virtual void print() = 0;
         virtual int evaluate() = 0;
         virtual std::list<std::string>* compile() = 0;
+        virtual void free_reg()  { regs.push_front(addr); addr = ""; }
         
 };
 
@@ -38,6 +39,8 @@ class num_node : public expression_node {
             // build the load immediate instruction to load the value
             std::string num_code = "(LIMM, " + addr + ", " + std::to_string(val) + ")";
             code.push_front(num_code);
+            line_num++;
+            
             return &code;
         }
 };
@@ -53,6 +56,7 @@ class var_node : public expression_node {
         std::list<std::string>* compile() {
             return new std::list<std::string>();
         }
+        void free_reg() { return; } 
 };
 
 class add_node : public expression_node {
@@ -85,10 +89,10 @@ class add_node : public expression_node {
             code.push_back(add_code);
 
             // cleaning up registers to be reused
-            regs.push_front(right->addr);
-            regs.push_front(left->addr);
-            right->addr = "";
-            left->addr = "";
+            right->free_reg();
+            left->free_reg();
+
+            line_num++;
             return &code;
         }
 };
@@ -123,10 +127,10 @@ class sub_node : public expression_node {
             code.push_back(sub_code);
 
             // cleaning up registers to be reused
-            regs.push_front(right->addr);
-            regs.push_front(left->addr);
-            right->addr = "";
-            left->addr = "";
+            right->free_reg();
+            left->free_reg();
+
+            line_num++;
             return &code;
         }
 };
@@ -161,10 +165,10 @@ class mult_node : public expression_node {
             code.push_back(mult_code);
 
             // cleaning up registers to be reused
-            regs.push_front(right->addr);
-            regs.push_front(left->addr);
-            right->addr = "";
-            left->addr = "";
+            right->free_reg();
+            left->free_reg();
+
+            line_num++;
             return &code;
         }
 };
@@ -199,10 +203,10 @@ class div_node : public expression_node {
             code.push_back(div_code);
 
             // cleaning up registers to be reused
-            regs.push_front(right->addr);
-            regs.push_front(left->addr);
-            right->addr = "";
-            left->addr = "";
+            left->free_reg();
+            right->free_reg();
+
+            line_num++;
             return &code;
         }
         
@@ -222,6 +226,7 @@ class gt_node : public expression_node {
             return left->evaluate() > right->evaluate();
         }
         std::list<std::string>* compile() {
+            addr = get_reg();
             // assembling code for GT comparison
             std::list<std::string> *left_code = left->compile();
             std::list<std::string>::iterator i;
@@ -234,6 +239,8 @@ class gt_node : public expression_node {
             }
             std::string gt_code = "(COMP, " + left->addr + ", " + right->addr + ", GT)";
             code.push_back(gt_code);
+
+            line_num++;
             return &code;
         }
 };
@@ -252,11 +259,21 @@ class lt_node : public expression_node {
             return left->evaluate() < right->evaluate();
         }
         std::list<std::string>* compile() {
-            std::string add_code = "(COMP, " + left->addr + ", " + right->addr + ", LT)";
-            // assembling code for add
-            code.push_back(*(left->compile()->begin()));
-            code.push_back(*(right->compile()->begin()));
-            code.push_back(add_code);
+            addr = get_reg();
+            // assembling code for LT comparison
+            std::list<std::string> *left_code = left->compile();
+            std::list<std::string>::iterator i;
+            for (i = left_code->begin(); i != left_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::list<std::string> *right_code = right->compile();
+            for (i = right_code->begin(); i != right_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::string gt_code = "(COMP, " + left->addr + ", " + right->addr + ", LT)";
+            code.push_back(gt_code);
+
+            line_num++;
             return &code;
         }
 };
@@ -275,11 +292,21 @@ class gte_node : public expression_node {
             return left->evaluate() >= right->evaluate();
         }
         std::list<std::string>* compile() {
-            std::string add_code = "(COMP, " + left->addr + ", " + right->addr + ", GTE)";
-            // assembling code for add
-            code.push_back(*(left->compile()->begin()));
-            code.push_back(*(right->compile()->begin()));
-            code.push_back(add_code);
+            addr = get_reg();
+            // assembling code for GTE comparison
+            std::list<std::string> *left_code = left->compile();
+            std::list<std::string>::iterator i;
+            for (i = left_code->begin(); i != left_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::list<std::string> *right_code = right->compile();
+            for (i = right_code->begin(); i != right_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::string gt_code = "(COMP, " + left->addr + ", " + right->addr + ", GTE)";
+            code.push_back(gt_code);
+
+            line_num++;
             return &code;
         }
 };
@@ -298,11 +325,21 @@ class lte_node : public expression_node {
             return left->evaluate() <= right->evaluate();
         }
         std::list<std::string>* compile() {
-            std::string add_code = "(COMP, " + left->addr + ", " + right->addr + ", LTE)";
-            // assembling code for add
-            code.push_back(*(left->compile()->begin()));
-            code.push_back(*(right->compile()->begin()));
-            code.push_back(add_code);
+            addr = get_reg();
+            // assembling code for LTE comparison
+            std::list<std::string> *left_code = left->compile();
+            std::list<std::string>::iterator i;
+            for (i = left_code->begin(); i != left_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::list<std::string> *right_code = right->compile();
+            for (i = right_code->begin(); i != right_code->end(); i++) {
+                code.push_back(*i);
+            }
+            std::string gt_code = "(COMP, " + left->addr + ", " + right->addr + ", LTE)";
+            code.push_back(gt_code);
+
+            line_num++;
             return &code;
         }
 };
@@ -346,8 +383,9 @@ class assign_statement : public statement {
             code.push_back(assign_code);
 
             // cleaning up expression register for reuse
-            regs.push_front(expression->addr);
-            expression->addr = "";
+            expression->free_reg();
+
+            line_num++;
             return &code;
         }
 };
@@ -362,9 +400,11 @@ class if_statement : public statement {
             expression->print();
             std::cout << " THEN: ";
             std::vector<statement*>::iterator stmt;
+            std::cout << "{";
             for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
                 (*stmt)->print();
             }
+            std::cout << "}" << std::endl;
         }
         void evaluate() {
             std::cout << "Evaluating IF cond: " << bool(expression->evaluate()) << std::endl;
@@ -378,7 +418,41 @@ class if_statement : public statement {
             }
         }
         std::list<std::string>* compile() {
-            return new std::list<std::string>();
+            std::list<std::string>* expr_code = expression->compile();
+            std::list<std::string>::iterator i;
+            for (i = expr_code->begin(); i != expr_code->end(); i++) {
+                code.push_back(*i);
+            }
+
+            // flags for looking for first code of THEN statement for JUMP
+            std::list<std::string>::iterator first_code;
+            bool is_first = true;
+
+            // looping through statement_list code
+            std::vector<statement*>::iterator stmt;
+            for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
+                std::list<std::string>* stmt_code = (*stmt)->compile();
+                for (i = stmt_code->begin(); i != stmt_code->end(); i++) {
+                    if (is_first) {
+                        is_first = false;
+                        code.push_back(*i);
+                        first_code = --code.end();
+                    }
+                    else {
+                        code.push_back(*i);
+                    }
+                }
+            }
+
+            // backpatching the jump instruction
+            std::string jump_code = "(JMPC, " + std::to_string(line_num + 1) + ")";
+            line_num++;
+            code.insert(first_code, jump_code);
+
+            // cleaning up registers
+            expression->free_reg();
+
+            return &code;
         }
 };
 
@@ -490,11 +564,12 @@ class program {
         void compile() {
             std::cout << "Outputting compiled SADGE VM instructions:" << std::endl;
             std::vector<statement*>::iterator i;
+            int x = 0;
             for (i = statement_list->begin(); i != statement_list->end(); i++) {
                 std::list<std::string>* stmt_code = (*i)->compile();
                 std::list<std::string>::iterator j;
                 for (j = stmt_code->begin(); j != stmt_code->end(); j++) {
-                    std::cout << *j << /*"," << */ std::endl;
+                    std::cout << x++ << ": " << *j << /*"," << */ std::endl;
                 }
             }
         }

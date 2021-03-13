@@ -12,6 +12,7 @@
     program* root;
     int yyerror(const char* s);
     int yylex();
+    int line_num = 0;
 
     std::list<std::string> regs = {"R_0", "R_1", "R_2", "R_3", "R_4", "R_5", "R_6", 
                                    "R_7", "R_8", "R_9", "R_10", "R_11", "R_12", "R_13"}; 
@@ -66,7 +67,6 @@ id_list: ID { insert_symbol($1); }
 ;
 
 block: BEG statement_list END { $$ = $2; }
-     | statement { $$ = new std::vector<statement*>(); $$->push_back($1); }
 ;
 
 statement_list: statement_list SEMI statement { $1->push_back($3); $$ = $1; }   
@@ -102,7 +102,7 @@ unary_expression: SUB unary_expression %prec UMINUS { $$ = new num_node(-($2->ev
                 | primary_expression { $$ = $1; }
 ;
 
-primary_expression: ID { $$ = new var_node($1); } 
+primary_expression: ID { $$ = lookup_symbol($1); } 
                   | NUM { $$ = new num_node($1); }
                   | '(' expression ')' { $$ = $2; }
 ;
