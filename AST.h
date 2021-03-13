@@ -40,7 +40,7 @@ class num_node : public expression_node {
             std::string num_code = "(LIMM, " + addr + ", " + std::to_string(val) + ")";
             code.push_front(num_code);
             line_num++;
-            
+
             return &code;
         }
 };
@@ -400,8 +400,9 @@ class if_statement : public statement {
             expression->print();
             std::cout << " THEN: ";
             std::vector<statement*>::iterator stmt;
-            std::cout << "{";
+            std::cout << "{" << std::endl;
             for (stmt = statement_list->begin(); stmt != statement_list->end(); stmt++) {
+                std::cout << "\t";
                 (*stmt)->print();
             }
             std::cout << "}" << std::endl;
@@ -498,7 +499,57 @@ class if_else_statement : public statement {
 
         }
         std::list<std::string>* compile() {
-            return new std::list<std::string>();
+            std::list<std::string>* expr_code = expression->compile();
+            std::list<std::string>::iterator i;
+            for (i = expr_code->begin(); i != expr_code->end(); i++) {
+                code.push_back(*i);
+            }
+
+            // flags for looking for first code of THEN statement for JUMP
+            std::list<std::string>::iterator first_code;
+            bool is_first = true;
+
+            // looping through THEN statements
+            std::vector<statement*>::iterator stmt;
+            for (stmt = then_list->begin(); stmt != then_list->end(); stmt++) {
+                std::list<std::string>* stmt_code = (*stmt)->compile();
+                for (i = stmt_code->begin(); i != stmt_code->end(); i++) {
+                    if (is_first) {
+                        is_first = false;
+                        code.push_back(*i);
+                        first_code = --code.end();
+                    }
+                    else {
+                        code.push_back(*i);
+                    }
+                }
+            }
+
+            // backpatching the jump instruction to get to ELSE
+            std::string jump_code = "(JMPC, " + std::to_string(line_num + 1) + ")";
+            line_num++;
+            code.insert(first_code, jump_code);
+
+            // grabbing the last instruction of THEN to backpatch jump past ELSE
+            std::list<std::string>::iterator last_code = --code.end();
+
+            // looping through ELSE statements
+            for (stmt = else_list->begin(); stmt != else_list->end(); stmt++) {
+                std::list<std::string>* stmt_code = (*stmt)->compile();
+                for (i = stmt_code->begin(); i != stmt_code->end(); i++) {
+                    code.push_back(*i);
+                }
+            }
+
+            // backpatching jump past ELSE
+            std::string jump_past_else = "(JMPC, " + std::to_string(line_num + 1) + ")";
+            line_num++;
+            code.insert(last_code, jump_past_else);
+
+            // cleaning up registers
+            expression->free_reg();
+
+            return &code;
         }
 };
 
@@ -572,6 +623,7 @@ class program {
                     std::cout << x++ << ": " << *j << /*"," << */ std::endl;
                 }
             }
+            std::cout << x << ": " << "(JMP, None)" << std::endl;
         }
 };
 
