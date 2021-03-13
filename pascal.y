@@ -1,4 +1,11 @@
 %{
+    /* pascal.y
+       Author: Kristopher J. Carroll
+       Description:
+          YACC/Bison file for parsing input code from a small subset of the Pascal programming language.
+          As the YACC format is generally well documented and fairly simple to follow, very little explanation
+          will be provided.
+    */
     // include code needed at the beginning here
     #include <iostream>
     #include <list>
@@ -18,7 +25,7 @@
                                    "R_7", "R_8", "R_9", "R_10", "R_11", "R_12", "R_13"}; 
 
 %}
-
+// Type union for YYLVAL
 %union {
     char* id;
     int num;
@@ -30,7 +37,6 @@
 }
 %token <num> NUM
 %token <id> ID
-
 %token PROGRAM BEG END PERIOD ASSIGN SEMI
 %token VAR COLON INTEGER
 %token IF THEN ELSE WHILE DO
@@ -40,12 +46,13 @@
 %left LT GT GTE LTE
 %left ADD SUB
 %left MULT DIV
+// these are used to set proper precedence for unary minus and IF vs. IF-ELSE productions
 %right UMINUS
 %nonassoc IFX
 %nonassoc ELSE
-
+// all of these nonterminals have the type of expression_node from AST.h
 %type <expr_node> expression additive_expression multiplicative_expression unary_expression primary_expression
-
+// further types for nonterminals from AST.h
 %type <id_list> id_list
 %type <statement_list> statement_list block
 %type <statement> statement
@@ -121,6 +128,8 @@ int yyerror(const char* s) {
     return 1;
 }
 
+// helper function for inserting symbols into the symbol map
+// will report an error if the same symbol is attempted to be declared twice
 void insert_symbol(std::string symbol) {
     if (symbols.find(symbol) == symbols.end()) {
         symbols[symbol] = new var_node(symbol);
@@ -133,6 +142,8 @@ void insert_symbol(std::string symbol) {
     }
 }
 
+// helper function for looking up a symbol in the symbol table
+// will report an error if a symbol not previously declared is attempted to be used
 var_node* lookup_symbol(std::string symbol) {
     if (symbols.find(symbol) != symbols.end()) {
         return symbols[symbol];

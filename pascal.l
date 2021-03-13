@@ -1,3 +1,11 @@
+/*
+    pascal.l
+    Author: Kristopher J. Carroll
+    Description:
+        Lex/Flex file for lexing a small subset of the Pascal programming language for use with pascal.y
+        and AST.h.
+*/
+
 %option noyywrap
 %{
     // code to load beforehand
