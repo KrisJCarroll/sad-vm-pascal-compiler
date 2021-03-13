@@ -67,6 +67,7 @@ id_list: ID { insert_symbol($1); }
 ;
 
 block: BEG statement_list END { $$ = $2; }
+     | statement {$$ = new std::vector<statement*>(); $$->push_back($1); }
 ;
 
 statement_list: statement_list SEMI statement { $1->push_back($3); $$ = $1; }   
