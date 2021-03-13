@@ -1,3 +1,33 @@
+/*
+AST.h
+Author: Kristopher J. Carroll
+Description:
+    This file outlines all necessary classes for constructing, printing, evaluating and compiling
+    a small subset of the Pascal programming language for use with the companion files pascal.l and
+    pascal.y. Evaluation causes an interpretive state of the input code, executed as C++ code.
+    Compilation will produce the appropriate instruction set for SAD VM (included in this repository
+    as SAD_VM.py) and outputs the compiled instructions to the console for copy-paste functionality.
+
+    The AST structure currently supports basic arithmetic functions (+, -, *, /) of integers, some
+    comparison operators (>, <, >=, <=), and basic control flow statements (if-then, if-then-else,
+    and while-do) common to the Pascal programming language.
+
+    Compilation occurs in a single pass, with backpatching for jump targets inserted after compilation
+    of the appropriate control flow structures. This compilation currently supports optional blocks
+    of statements as well as nested blocks but has not been tested thoroughly for various nesting of
+    statements that feature jump statements. Most register lifetimes are handled automatically with
+    constants and expressions freeing their registers back to the register pool after their respective
+    code segments have been recursively passed on to higher members of the tree. There is a limit of
+    14 total registers that can be allocated to nodes in the tree at any given time, after which 
+    undefined behavior may occur as there is currently no implementation for spilling registers
+    into memory. Additionally, values cannot be stored to memory under the current implementation,
+    leaving the compiler limited in the complexity it can handle in a program.
+
+    Evaluation uses an externally defined symbol map linking symbol identifiers to their respective
+    nodes, which store, update and output their values as necessary.
+*/
+
+
 #include <iostream>
 #include <stdio.h>
 #include <memory>
@@ -5,9 +35,18 @@
 #include <list>
 #include <map>
 
-extern std::list<std::string> regs;
-extern int line_num;
+extern std::list<std::string> regs; // list of string representation of register numbers for SAD VM
+extern int line_num; // line number counter
 
+// General base class for all expressions
+// Temporary registers for storing evaluated values of expressions occurs by popping them
+// off the register list and later pushing them back on when no longer needed.
+// Each node can store two children, the left and right operands for a general expression.
+// Each inherited node type implements its own print, evaluate and compile functions according
+// to their needs.
+//
+// Each node also has storage for its respective SAD VM instruction code, which is generated
+// through recursive traversal of the abstract syntax tree constructed during parsing.
 class expression_node {
     protected: 
         std::string get_reg() {
@@ -27,6 +66,7 @@ class expression_node {
         
 };
 
+// leaf node for storing constant integer numbers
 class num_node : public expression_node {
     protected:
         int val;
@@ -45,6 +85,8 @@ class num_node : public expression_node {
         }
 };
 
+// leaf node for storing variables of integer type
+// stores both the string identifier as well as the value of the node
 class var_node : public expression_node {
     protected:
         std::string id;
@@ -59,6 +101,7 @@ class var_node : public expression_node {
         void free_reg() { return; } 
 };
 
+// node for addition expressions
 class add_node : public expression_node {
     public:
         add_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -97,6 +140,7 @@ class add_node : public expression_node {
         }
 };
 
+// node for subtraction expressions
 class sub_node : public expression_node {
     public:
         sub_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -135,6 +179,7 @@ class sub_node : public expression_node {
         }
 };
 
+// node for multiplication expressions
 class mult_node : public expression_node {
     public:
         mult_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -173,6 +218,7 @@ class mult_node : public expression_node {
         }
 };
 
+// node for division expressions - does not handle divide by 0
 class div_node : public expression_node {
     public:
         div_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -212,6 +258,7 @@ class div_node : public expression_node {
         
 };
 
+// node for greater-than comparison expressions
 class gt_node : public expression_node {
     public:
         gt_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -245,6 +292,7 @@ class gt_node : public expression_node {
         }
 };
 
+// node for less-than comparison expressions
 class lt_node : public expression_node {
     public:
         lt_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -278,6 +326,7 @@ class lt_node : public expression_node {
         }
 };
 
+// node for greather than or equal comparison expressions
 class gte_node : public expression_node {
     public:
         gte_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -311,6 +360,7 @@ class gte_node : public expression_node {
         }
 };
 
+// node for less than or equal comparison expressions
 class lte_node : public expression_node {
     public:
         lte_node(expression_node* left_, expression_node* right_) { left = left_; right = right_; }
@@ -344,7 +394,7 @@ class lte_node : public expression_node {
         }
 };
 
-
+// general class for statements with storage for an expression node and compiled SAD VM code
 class statement {
     protected:
         std::list<std::string> code; // storage for concatenated code strings
@@ -355,6 +405,8 @@ class statement {
         virtual std::list<std::string>* compile() = 0;
 };
 
+// class for handling assignment statements, this node will update variables
+// appropriately after assignment during evaluation
 class assign_statement : public statement {
     protected:
         var_node* id;
@@ -389,6 +441,10 @@ class assign_statement : public statement {
         }
 };
 
+// class for handling IF-THEN statements, supporting optional blocks of statements in the THEN section
+// during evaluation, the condition expression is evaluated and the appropriate code is executed
+// during compilation, the condition expression is compiled first followed by the THEN statements
+// after statements have been compiled, the appropriate jump target is backpatched in
 class if_statement : public statement {
     protected:
         std::vector<statement*>* statement_list;
@@ -455,6 +511,7 @@ class if_statement : public statement {
         }
 };
 
+// class for IF-THEN-ELSE statements, functions similarly to the if_statement class
 class if_else_statement : public statement {
     protected:
         std::vector<statement*> *then_list;
@@ -554,6 +611,8 @@ class if_else_statement : public statement {
         }
 };
 
+// class for supporting WHILE-DO statements with jump targets backpatched after expression and 
+// DO statement compilation has occurred and been concatenated
 class while_statement : public statement {
     protected:
         std::vector<statement*> *statement_list;
@@ -625,6 +684,9 @@ class while_statement : public statement {
         }
 };
 
+// class for handling write statements
+// compilation of this class is very simple as it only needs to provide the address
+// of the passed expression for the instruction to function correctly
 class write_statement : public statement {
     public:
         write_statement(expression_node* exp) { expression = exp; } 
@@ -644,6 +706,9 @@ class write_statement : public statement {
         }
 };
 
+// overall container for recursing through the tree and concatenating the appropriate code found within
+// this class supports compilation output with line numbers for easy reference or copy-paste format
+// for direct pasting into the SAD_VM.py file included in this repository
 class program {
     protected:
         std::vector<statement*> *statement_list; // AST representation of the program's statements

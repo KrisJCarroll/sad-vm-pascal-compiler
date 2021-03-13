@@ -281,7 +281,7 @@ prog = [
     (MATH, R_8, R_7, R_6, DIV), # 28 R_8(quotient) = num / 16
     (MATH, R_9, R_8, R_6, MULT), # 29 R_9(temp) = quotient * divisor
     (MATH, R_9, R_7, R_9, SUB), # 30 R_9(remainder) = R_6 - R_8
-    (COMP, R_9, R_5, LT), # 31 if remainder > 10 ***NOTE: THIS MAY NEED TO BE LTE DEPENDING ON SYSTEM***
+    (COMP, R_9, R_5, LT), # 31 if remainder > 10
     (JMPC, 35), # 32 skip to 35
     (MATHI, R_9, ADD, 48), # 33 else add 48 to remainder for correct ASCII value
     (JMP, 36), # 34 and continue
