@@ -11,3 +11,5 @@ test.pas
 *.txt
 .vscode/settings.json
 .vscode/c_cpp_properties.json
+KCarroll_SAD_VM_Pascal_Compiler.zip
+.DS_Store
