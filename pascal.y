@@ -6,11 +6,15 @@
     #include <string>
     #include "AST.h"
     #include "parser.h"
-    std::map<std::string, int> symbols;
+    std::map<std::string, var_node*> symbols;
     void insert_symbol(std::string symbol);
+    var_node* lookup_symbol(std::string symbol);
     program* root;
     int yyerror(const char* s);
     int yylex();
+
+    std::list<std::string> regs = {"R_0", "R_1", "R_2", "R_3", "R_4", "R_5", "R_6", 
+                                   "R_7", "R_8", "R_9", "R_10", "R_11", "R_12", "R_13"}; 
 
 %}
 
@@ -70,11 +74,11 @@ statement_list: statement_list SEMI statement { $1->push_back($3); $$ = $1; }
               
 ;
 
-statement: ID ASSIGN expression { $$ = new assign_statement($1, $3); }
+statement: ID ASSIGN expression { $$ = new assign_statement(lookup_symbol($1), $3); }
          | IF expression THEN block %prec IFX { $$ = new if_statement($2, $4); }
          | IF expression THEN block ELSE block { $$ = new if_else_statement($2, $4, $6); }
          | WHILE expression DO block { $$ = new while_statement($2, $4); }
-         | WRITELN expression SEMI { }
+         | WRITELN expression { $$ = new write_statement($2); }
 ;
 
 expression: expression GT additive_expression  { $$ = new gt_node($1, $3); }
@@ -108,6 +112,7 @@ primary_expression: ID { $$ = new var_node($1); }
 int main() {
     yyparse();
     root->evaluate();
+    root->compile();
 }
 
 int yyerror(const char* s) {
@@ -117,7 +122,7 @@ int yyerror(const char* s) {
 
 void insert_symbol(std::string symbol) {
     if (symbols.find(symbol) == symbols.end()) {
-        symbols[symbol] = 0;
+        symbols[symbol] = new var_node(symbol);
     }
     else {
         std::string error_msg = "symbol previously declared: ";
@@ -127,9 +132,9 @@ void insert_symbol(std::string symbol) {
     }
 }
 
-int* lookup_symbol(std::string symbol) {
+var_node* lookup_symbol(std::string symbol) {
     if (symbols.find(symbol) != symbols.end()) {
-        return &(symbols[symbol]);
+        return symbols[symbol];
     }
     else {
         std::string error_msg = "symbol not previously declared: ";
