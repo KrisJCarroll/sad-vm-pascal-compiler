@@ -684,7 +684,6 @@ class program {
         */
 
             // outputting compiled instructions in copy-paste format
-            code.clear();
             std::cout << "Copy/paste format for input into SADGE VM:" << std::endl;
             for (i = statement_list->begin(); i != statement_list->end(); i++) {
                 std::list<std::string>* stmt_code = (*i)->compile();
